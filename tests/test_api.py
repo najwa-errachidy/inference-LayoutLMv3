@@ -1,18 +1,18 @@
 import json
 import pytest
-from app import app
+from app.app import app
 
 
 @pytest.fixture
 def simple_client():
-    #app.config["TESTING"] = True
+    app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
 
 
 @pytest.fixture
 def max_document_size_client():
-    #app.config["TESTING"] = True
+    app.config["TESTING"] = True
     app.config["MAX_CONTENT_LENGTH"] = 3 * 1024 * 1024  # 3 MB max file size
     with app.test_client() as client:
         yield client

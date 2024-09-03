@@ -17,3 +17,5 @@
 2. Run the tests using pytest for API: `python -m pytest tests/test_api.py`
 
 3. Run the tests using pytest for post processing methods: `python -m pytest tests/test_post_processing.py`
+
+4. Run all the tests at once: `python -m pytest tests/`

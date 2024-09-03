@@ -26,7 +26,7 @@ def upload_form():
     return render_template("upload.html")
 
 
-@app.route("/api/process_document", methods=["POST"])
+@app.route("/process_document", methods=["POST"])
 def process_document():
     # Check if the post request has the file part
     if "document" not in request.files:
