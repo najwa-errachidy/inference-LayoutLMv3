@@ -77,10 +77,7 @@ def get_entities(confidence_matrix, decoded_texts):
     return entities
 
 
-def get_best_entity_by_confidence(confidence_matrix, decoded_texts):
-    # Get all entities
-    entities = get_entities(confidence_matrix, decoded_texts)
-
+def get_best_entity_by_confidence(entities):
     # Initialize a dictionary to store the maximum confidence entries for each label
     max_confidence_dict = {}
 

@@ -73,7 +73,7 @@ def process_document():
 
         # Post-processing
         all_entities = get_entities(model.confidence_matrix, model.decoded_texts)
-        best_entities = get_best_entity_by_confidence(model.confidence_matrix, model.decoded_texts)
+        best_entities = get_best_entity_by_confidence(all_entities)
         filtered_entities = filter_entities_by_confidence(all_entities)
         parsed_monetary_entities = parse_monetary_values(all_entities if all_monetary else filtered_entities)
 
