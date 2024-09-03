@@ -5,17 +5,17 @@ from flask import Flask, jsonify, request, render_template
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
-from model.layoutlmv3 import LayoutLMv3
+from model.layoutlmv3 import LayoutLMv3Model
 from utils.post_processing import (
-    filter_entities_by_confidence,
     get_best_entity_by_confidence,
+    filter_entities_by_confidence,
     parse_monetary_values,
 )
 
 # Configuration variables
 UPLOAD_FOLDER = "uploads/"
 MAX_CONTENT_LENGTH = 3 * 1024 * 1024  # 3 MB max file size
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+ALLOWED_EXTENSIONS = {"jpg", "jpeg"}
 
 # Creating the app
 app = Flask(__name__)
@@ -24,7 +24,7 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 
 
 # Model class
-model = LayoutLMv3()
+model = LayoutLMv3Model()
 
 
 # Routes
@@ -60,28 +60,23 @@ def process_document():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
 
-        # Perform encoding and inference
-        model.encode(file_path)
-
-        # Remove file from local folder
-        # os.remove(file_path)
-
         # Perform inference
-        model.predict()
-
-        # Post-processing
-        best_entity = get_best_entity_by_confidence(model.entities)
-        filtered_entities = filter_entities_by_confidence(model.entities)
-        parsed_entities = parse_monetary_values(model.entities)
-
-        response = {
-            "best_entity": best_entity,
-            "filtered_entities": filtered_entities,
-            "parsed_entities": parsed_entities,
-        }
+        model.predict(file_path)
 
         # Remove file from local folder
         os.remove(file_path)
+
+        # Post-processing
+        best_entities = get_best_entity_by_confidence(model.confidence_matrix, model.decoded_texts)
+        filtered_entities = filter_entities_by_confidence(best_entities)
+        parsed_entities = parse_monetary_values(filtered_entities)
+
+        response = {
+            "image_file": filename,
+            "best_entity": best_entities,
+            "filtered_entities": filtered_entities,
+            "parsed_entities": parsed_entities,
+        }
 
         return jsonify(response)
 

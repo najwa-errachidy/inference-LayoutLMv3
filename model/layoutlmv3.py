@@ -1,77 +1,58 @@
+import numpy as np
 from PIL import Image
 import pytesseract
 from transformers import LayoutLMv3Processor, LayoutLMv3ForTokenClassification
 import torch
 
-class LayoutLMv3:
+class LayoutLMv3Model:
     def __init__(self):
-        self.labels = [
-            'menu.cnt',
-            'menu.discountprice',
-            'menu.etc',
-            'menu.itemsubtotal',
-            'menu.nm',
-            'menu.num',
-            'menu.price',
-            'menu.sub_cnt',
-            'menu.sub_etc',
-            'menu.sub_nm',
-            'menu.sub_price',
-            'menu.sub_unitprice',
-            'menu.unitprice',
-            'menu.vatyn',
-            'sub_total.discount_price',
-            'sub_total.etc',
-            'sub_total.othersvc_price',
-            'sub_total.service_price',
-            'sub_total.subtotal_price',
-            'sub_total.tax_price',
-            'total.cashprice',
-            'total.changeprice',
-            'total.creditcardprice',
-            'total.emoneyprice',
-            'total.menuqty_cnt',
-            'total.menutype_cnt',
-            'total.total_etc',
-            'total.total_price',
-            'void_menu.nm',
-            'void_menu.price'
-        ]
-        self.id2label = {v: k for v, k in enumerate(self.labels)}
-
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.processor = LayoutLMv3Processor.from_pretrained("microsoft/layoutlmv3-base")
         self.model = LayoutLMv3ForTokenClassification.from_pretrained("najwaerrachidy/layoutlmv3-finetuned-cordv2")
-        self.encoding = {}
-        self.entities = []
+        self.encoding = None
+        self.confidence_matrix = None
+        self.decoded_texts = None
+
+
+    def preprocess_image(self, image_path):
+        # Convert image to PIL Image if it's not already
+        if not isinstance(image_path, Image.Image):
+            image = Image.open(image_path)
+        return image
     
 
-    def encode(self, image_path):
+    def encode(self, image):
         # Process image to get its encodings
-        image = Image.open(image_path)
+        self.encoding = {}
         self.encoding = self.processor(image, return_offsets_mapping=False, return_tensors="pt")
         for k,v in self.encoding.items():
             self.encoding[k] = v.to(self.device)
 
+    
+    def decode(self):
+        # Decode the input_ids back to text
+        input_ids = self.encoding['input_ids']
+        input_ids_list = input_ids.flatten().tolist()
+       
+        self.decoded_texts = [self.processor.tokenizer.decode(id, skip_special_tokens=True) for id in input_ids_list]
 
-    def predict(self):
+
+    def predict(self, image_path):
+        # Preprocess image
+        image = self.preprocess_image(image_path)
+
+        # Prepare the inputs
+        self.encode(image)
+
+        # Decode back to text
+        self.decode()
+
         # Set the path to the Tesseract executable
         pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
 
         # Predict for label for each entity, calculate confidence scores, decode text
-        outputs = self.model(**self.encoding)
-        confidence = [max(l) for l in outputs.logits[0].detach().numpy()]
-        ids = outputs.logits.argmax(-1).squeeze().tolist()
-        
-        input_ids = self.encoding['input_ids']
-        input_ids_list = input_ids.flatten().tolist()
-
-        # Decode the input_ids back to text
-        decoded_texts = [self.processor.tokenizer.decode(id, skip_special_tokens=True) for id in input_ids_list]
-        
-        for i in range(len(ids)):
-            self.entities.append({
-                'text' : decoded_texts[i],
-                'label' : self.id2label[ids[i]],
-                'confidence' : confidence[i]
-            })
+        with torch.no_grad():
+            outputs = self.model(**self.encoding)
+            
+        # Get the confidence matrix [1, 99, 30]
+        self.confidence_matrix = torch.softmax(outputs.logits, dim=-1).squeeze().detach().numpy()
