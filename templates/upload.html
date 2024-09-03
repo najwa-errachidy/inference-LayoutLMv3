@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload Your Document</h1>
+        <form action="{{ url_for('process_document') }}" method="post" enctype="multipart/form-data">
+            <label for="document" class="tooltip">
+                Choose file to upload
+                <span class="tooltiptext">File size should not exceed 3MB</span>
+            </label>
+            <input type="file" id="document" name="document" accept="image/png, image/jpeg" required>
+            <button type="submit">Upload</button>
+        </form>
+        
+        <!-- Preview Container -->
+        <div class="preview-container">
+            <img id="image-preview" src="#" alt="Image Preview" style="display:none;">
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('document').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = document.getElementById('image-preview');
+                    img.src = e.target.result;
+                    img.style.display = 'block'; // Show the image
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('image-preview').style.display = 'none'; // Hide if no file is selected
+            }
+        });
+    </script>
+</body>
+</html>
