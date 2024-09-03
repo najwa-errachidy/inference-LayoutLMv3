@@ -54,5 +54,5 @@ class LayoutLMv3Model:
         with torch.no_grad():
             outputs = self.model(**self.encoding)
             
-        # Get the confidence matrix [1, 99, 30]
+        # Get the confidence matrix
         self.confidence_matrix = torch.softmax(outputs.logits, dim=-1).squeeze().detach().numpy()

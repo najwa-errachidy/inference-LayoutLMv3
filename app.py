@@ -43,7 +43,7 @@ def is_allowed_file(filename):
 def process_document():
     # Check if the post request has the file part
     if "document" not in request.files:
-        return jsonify({"error": "No document part"}), 400
+        return jsonify({"error": "No document found"}), 400
 
     file = request.files["document"]
 
@@ -53,9 +53,9 @@ def process_document():
 
     # Check if the file type is allowed
     if not is_allowed_file(file.filename):
-        return jsonify({"error": "Invalid document mimetype, must be image/*"}), 400
+        return jsonify({"error": "Invalid document type, must be image"}), 400
 
-    # Check if checkboxes are selected
+    # Check if checkbox is selected
     all_monetary = True if request.form.get("all_monetary") else False
 
     try:
@@ -84,7 +84,7 @@ def process_document():
             "parsed_monetary_entities": parsed_monetary_entities
         }
 
-        return jsonify(response)
+        return jsonify(response), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
