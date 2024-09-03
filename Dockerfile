@@ -7,6 +7,9 @@ WORKDIR /app
 # Step 3: Copy the requirements file into the container at /app
 COPY requirements.txt .
 
+# Step 3.5: Install tesseract OCR
+RUN apt-get update && apt install tesseract-ocr -y
+
 # Step 4: Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -1,7 +1,9 @@
+import os
 import json
 
 from flask import Flask, jsonify, request, render_template
 from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.utils import secure_filename
 
 from model.layoutlmv3 import LayoutLMv3
 from utils.post_processing import (
@@ -11,7 +13,7 @@ from utils.post_processing import (
 )
 
 # Configuration variables
-UPLOAD_FOLDER = "/uploads"
+UPLOAD_FOLDER = "uploads/"
 MAX_CONTENT_LENGTH = 3 * 1024 * 1024  # 3 MB max file size
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
@@ -53,19 +55,33 @@ def process_document():
         return jsonify({"error": "Invalid document mimetype, must be image/*"}), 400
 
     try:
-        # Perform inference (mock)
-        predictions = model.predict(file)
+        # Save image to local folder
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+
+        # Perform encoding and inference
+        model.encode(file_path)
+
+        # Remove file from local folder
+        # os.remove(file_path)
+
+        # Perform inference
+        model.predict()
 
         # Post-processing
-        best_entity = get_best_entity_by_confidence(predictions)
-        filtered_entities = filter_entities_by_confidence(predictions)
-        parsed_entities = parse_monetary_values(filtered_entities)
+        best_entity = get_best_entity_by_confidence(model.entities)
+        filtered_entities = filter_entities_by_confidence(model.entities)
+        parsed_entities = parse_monetary_values(model.entities)
 
         response = {
             "best_entity": best_entity,
             "filtered_entities": filtered_entities,
             "parsed_entities": parsed_entities,
         }
+
+        # Remove file from local folder
+        os.remove(file_path)
 
         return jsonify(response)
 

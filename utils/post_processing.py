@@ -7,7 +7,7 @@ def filter_entities_by_confidence(entities, threshold=0.6):
 
 
 def parse_monetary_values(entities):
-    monetary_labels = ["PRICE", "TAX", "TOTAL"]
+    monetary_labels = ["total.total_price", "sub_total.tax_price", "total.total_etc"]
     for entity in entities:
         if entity["label"] in monetary_labels:
             try:

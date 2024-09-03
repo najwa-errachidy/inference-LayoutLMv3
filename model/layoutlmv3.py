@@ -1,4 +1,5 @@
 from PIL import Image
+import pytesseract
 from transformers import LayoutLMv3Processor, LayoutLMv3ForTokenClassification
 import torch
 
@@ -54,6 +55,9 @@ class LayoutLMv3:
 
 
     def predict(self):
+        # Set the path to the Tesseract executable
+        pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
+
         # Predict for label for each entity, calculate confidence scores, decode text
         outputs = self.model(**self.encoding)
         confidence = [max(l) for l in outputs.logits[0].detach().numpy()]
