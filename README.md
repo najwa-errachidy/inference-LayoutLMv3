@@ -14,4 +14,6 @@
 
 1. Attach a shell to the running Docker container: `docker exec -it inference bash`
 
-2. Run the tests using pytest: `python -m pytest tests/test_api.py`
+2. Run the tests using pytest for API: `python -m pytest tests/test_api.py`
+
+3. Run the tests using pytest for post processing methods: `python -m pytest tests/test_post_processing.py`
