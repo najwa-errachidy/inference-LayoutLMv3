@@ -9,3 +9,9 @@
 3. Open your web browser and go to `http://localhost:5000/`
 
 4. Upload your image and click on Upload to view teh results
+
+# To run the tests:
+
+1. Attach a shell to the running Docker container: `docker exec -it inference bash`
+
+2. Run the tests using pytest: `python -m pytest tests/test_api.py`

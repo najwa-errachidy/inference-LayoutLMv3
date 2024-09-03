@@ -46,6 +46,7 @@ class LayoutLMv3Mock:
                     "text": f"Sample Text {random.randint(1, 100)}",
                     "label": random.choice(self.labels),
                     "confidence": round(random.uniform(0.1, 1.0), 2),
+                    "box": [random.randint(0, 100) for _ in range(4)],
                 }
             )
         return predictions
