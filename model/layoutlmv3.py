@@ -1,0 +1,1 @@
+# Where the code for loading the actual LayoutLMv3 model and predicting will be placed
