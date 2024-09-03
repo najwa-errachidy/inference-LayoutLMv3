@@ -3,27 +3,37 @@ import json
 from flask import Flask, jsonify, request, render_template
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from model.layoutlmv3_mock import LayoutLMv3Mock
+from model.layoutlmv3 import LayoutLMv3
 from utils.post_processing import (
     filter_entities_by_confidence,
     get_best_entity_by_confidence,
     parse_monetary_values,
 )
 
-app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 3 * 1024 * 1024  # 3 MB max file size
-
-# to be replaced by actual model class after
-model = LayoutLMv3Mock()
-
+# Configuration variables
+UPLOAD_FOLDER = "/uploads"
+MAX_CONTENT_LENGTH = 3 * 1024 * 1024  # 3 MB max file size
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Creating the app
+app = Flask(__name__)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 
 
+# Model class
+model = LayoutLMv3()
+
+
+# Routes
 @app.route("/", methods=["GET"])
 def upload_form():
     return render_template("upload.html")
+
+
+# Check if file extension is allowed
+def is_allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/process_document", methods=["POST"])
@@ -39,7 +49,7 @@ def process_document():
         return jsonify({"error": "Empty document"}), 400
 
     # Check if the file type is allowed
-    if not allowed_file(file.filename):
+    if not is_allowed_file(file.filename):
         return jsonify({"error": "Invalid document mimetype, must be image/*"}), 400
 
     try:
