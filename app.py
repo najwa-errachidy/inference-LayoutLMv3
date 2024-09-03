@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from model.layoutlmv3 import LayoutLMv3Model
 from utils.post_processing import (
+    get_entities,
     get_best_entity_by_confidence,
     filter_entities_by_confidence,
     parse_monetary_values,
@@ -54,6 +55,9 @@ def process_document():
     if not is_allowed_file(file.filename):
         return jsonify({"error": "Invalid document mimetype, must be image/*"}), 400
 
+    # Check if checkboxes are selected
+    all_monetary = request.form.get("all_monetary")
+
     try:
         # Save image to local folder
         filename = secure_filename(file.filename)
@@ -67,15 +71,17 @@ def process_document():
         os.remove(file_path)
 
         # Post-processing
+        all_entities = get_entities(model.confidence_matrix, model.decoded_texts)
         best_entities = get_best_entity_by_confidence(model.confidence_matrix, model.decoded_texts)
-        filtered_entities = filter_entities_by_confidence(best_entities)
-        parsed_entities = parse_monetary_values(filtered_entities)
+        filtered_entities = filter_entities_by_confidence(all_entities)
+        parsed_monetary_entities = parse_monetary_values(all_entities if all_monetary else filtered_entities)
 
         response = {
             "image_file": filename,
-            "best_entity": best_entities,
+            "entities": all_entities,
+            "best_entities": best_entities,
             "filtered_entities": filtered_entities,
-            "parsed_entities": parsed_entities,
+            "parsed_monetary_entities": parsed_monetary_entities
         }
 
         return jsonify(response)

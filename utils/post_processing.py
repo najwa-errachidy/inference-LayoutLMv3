@@ -61,7 +61,9 @@ monetary_labels = [
     'total.emoneyprice'
 ]
 
-def get_best_entity_by_confidence(confidence_matrix, decoded_texts):
+
+def get_entities(confidence_matrix, decoded_texts):
+    # Build list of all entities
     ids = confidence_matrix.argmax(-1).tolist()
     confidence = [max(l) for l in confidence_matrix]
 
@@ -75,11 +77,27 @@ def get_best_entity_by_confidence(confidence_matrix, decoded_texts):
     return entities
 
 
+def get_best_entity_by_confidence(confidence_matrix, decoded_texts):
+    # Get all entities
+    entities = get_entities(confidence_matrix, decoded_texts)
+
+    # Initialize a dictionary to store the maximum confidence entries for each label
+    max_confidence_dict = {}
+
+    for entity in entities:
+        label = entity['label']
+        # If the label is not in the dictionary or the current confidence is greater than the stored one
+        if label not in max_confidence_dict or entity['confidence'] > max_confidence_dict[label]['confidence']:
+            max_confidence_dict[label] = entity
+    return list(max_confidence_dict.values())
+
+
 def filter_entities_by_confidence(entities, threshold=0.6):
     return [entity for entity in entities if entity["confidence"] >= threshold]
 
 
 def parse_monetary_values(entities):
+    parsed_monetary_entities = []
     for entity in entities:
         if entity["label"] in monetary_labels:
             try:
@@ -89,4 +107,5 @@ def parse_monetary_values(entities):
                 )
             except ValueError:
                 entity["value"] = None
-    return entities
+            parsed_monetary_entities.append(entity)
+    return parsed_monetary_entities
