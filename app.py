@@ -56,7 +56,8 @@ def process_document():
         return jsonify({"error": "Invalid document mimetype, must be image/*"}), 400
 
     # Check if checkboxes are selected
-    all_monetary = request.form.get("all_monetary")
+    
+    all_monetary = True if request.form.get("all_monetary") else False
 
     try:
         # Save image to local folder

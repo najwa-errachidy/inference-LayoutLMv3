@@ -1,6 +1,6 @@
 # Inference with LayoutLMv3 inside a Flask application
 
-# To run the app, do the following steps:
+## To run the app, do the following steps:
 
 1. Build the Docker image: `docker build -t flask-app .`
 
@@ -10,7 +10,7 @@
 
 4. Upload your image and click on Upload to view teh results
 
-# To run the tests:
+## To run the tests:
 
 1. Attach a shell to the running Docker container: `docker exec -it inference bash`
 

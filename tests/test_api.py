@@ -18,16 +18,40 @@ def max_document_size_client():
         yield client
 
 
-def test_process_document_success(simple_client):
-    data = {"document": (open("tests/test_image.jpg", "rb"), "test_image.jpg")}
+def test_process_document_success_checkbox_off(simple_client):
+    data = {
+        "document": (open("tests/test_image.jpg", "rb"), "test_image.jpg"),
+    }
     response = simple_client.post(
         "/process_document", data=data, content_type="multipart/form-data"
     )
     assert response.status_code == 200
     result = json.loads(response.data)
-    assert "best_entity" in result
+    assert "image_file" in result
+    assert "entities" in result
+    assert "best_entities" in result
     assert "filtered_entities" in result
-    assert "parsed_entities" in result
+    assert "parsed_monetary_entities" in result
+    # Assert that all 'confidence' values in 'parsed_monetary_entities' are >= 0.6
+    for entity in result["parsed_monetary_entities"]:
+        assert entity["confidence"] >= 0.6
+
+
+def test_process_document_success_checkbox_on(simple_client):
+    data = {
+        "document": (open("tests/test_image.jpg", "rb"), "test_image.jpg"),
+        "all_monetary": "on"  # Mimic checkbox being checked
+    }
+    response = simple_client.post(
+        "/process_document", data=data, content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    result = json.loads(response.data)
+    assert "image_file" in result
+    assert "entities" in result
+    assert "best_entities" in result
+    assert "filtered_entities" in result
+    assert "parsed_monetary_entities" in result
 
 
 def test_process_document_no_file(simple_client):
